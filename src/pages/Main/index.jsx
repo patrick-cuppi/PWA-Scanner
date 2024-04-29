@@ -1,11 +1,33 @@
 import React, { useEffect } from "react";
 
+// eslint-disable-next-line import/no-extraneous-dependencies
 import Quagga from "quagga";
 import { Video } from "./styles";
+import { validateIsbn } from "../../services/books"
 
 
 export default function Main() {
-    
+  let scannerAttemps = 0;
+
+  const onDetected = result => {
+      Quagga.offDetected(onDetected);
+
+      const isbn = result.codeResult.code;
+
+      if(validateIsbn(isbn)) {
+        alert(`ISBN válido ${isbn}`);
+        return;
+      } else {
+        if(scannerAttemps >= 5) {
+          alert('Não é possível ler o código do livro!')
+        }
+      }
+
+      scannerAttemps++;
+      Quagga.onDetected(onDetected);
+      
+    }  
+
     useEffect(() => {
       if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         Quagga.init({
@@ -31,7 +53,10 @@ export default function Main() {
         }
 
         Quagga.start();
-      }
+      },
+
+      Quagga.onDetected(onDetected)
+
       );
       }
     }, []);
